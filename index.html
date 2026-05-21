@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POA 2026 · Agencias TEXO Holding</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0e17; --bg2:#0f1521; --card:#151c2c; --card2:#1b2436;
+    --border:#27314a; --txt:#e8edf7; --txt2:#9aa6bf; --txt3:#6b7794;
+    --gold:#f5b942; --teal:#2dd4bf; --blue:#3b82f6; --green:#34d399;
+    --red:#f87171; --purple:#a78bfa; --pink:#f472b6;
+    --lupe:#f5b942; --brick:#f87171; --omd:#3b82f6; --nasta:#34d399; --roger:#a78bfa; --row:#f472b6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 600px at 80% -10%, #16203a 0%, var(--bg) 55%);color:var(--txt);
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.5;min-height:100vh;padding-bottom:60px}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+  header{padding:28px 0 18px;border-bottom:1px solid var(--border);margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .logo{font-weight:800;font-size:13px;letter-spacing:3px;background:linear-gradient(135deg,var(--gold),#e0892b);
+    color:#1a1206;padding:6px 12px;border-radius:6px}
+  h1{font-size:23px;font-weight:700;letter-spacing:.3px}
+  .sub{color:var(--txt2);font-size:13px;margin-top:4px}
+  .pill{font-size:11px;color:var(--gold);border:1px solid var(--gold);padding:3px 9px;border-radius:20px;font-weight:600}
+  .units{font-size:11px;color:var(--txt3);margin-top:8px}
+
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:26px;background:var(--bg2);padding:6px;border-radius:12px;border:1px solid var(--border)}
+  nav button{flex:1;min-width:140px;background:transparent;color:var(--txt2);border:none;padding:11px 14px;border-radius:8px;
+    font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  nav button:hover{color:var(--txt)}
+  nav button.active{background:linear-gradient(135deg,#1f2a44,#243150);color:#fff;box-shadow:0 2px 14px rgba(0,0,0,.4)}
+
+  .tab{display:none;animation:fade .35s ease}
+  .tab.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt2);margin:30px 0 14px;font-weight:700;
+    display:flex;align-items:center;gap:10px}
+  .section-title::before{content:"";width:4px;height:16px;background:var(--gold);border-radius:2px}
+
+  .grid{display:grid;gap:16px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .cols-2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+  .cols-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+
+  .card{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--border);border-radius:14px;padding:18px}
+  .kpi{position:relative;overflow:hidden}
+  .kpi .label{font-size:11.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .kpi .val{font-size:25px;font-weight:800;margin-top:8px;letter-spacing:-.5px}
+  .kpi .foot{font-size:12px;color:var(--txt3);margin-top:5px}
+  .kpi .bar{position:absolute;left:0;bottom:0;height:3px;background:var(--gold)}
+  .kpi.g .val{color:var(--green)} .kpi.b .val{color:var(--blue)} .kpi.gold .val{color:var(--gold)}
+  .kpi.t .val{color:var(--teal)} .kpi.p .val{color:var(--purple)}
+
+  .chart-card{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--border);border-radius:14px;padding:18px}
+  .chart-card h3{font-size:14px;font-weight:700;margin-bottom:4px}
+  .chart-card .ch-sub{font-size:12px;color:var(--txt3);margin-bottom:14px}
+  .ch-box{position:relative;height:300px}
+  .ch-box.tall{height:360px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--border)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--txt2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:var(--bg2);position:sticky;top:0}
+  tbody tr:hover{background:rgba(255,255,255,.025)}
+  tr.total td{font-weight:800;color:var(--gold);border-top:1px solid var(--gold)}
+  tr.sub td{font-weight:700;background:rgba(245,185,66,.05)}
+  tr.head-row td{font-weight:700;color:var(--teal)}
+  .table-scroll{overflow-x:auto;border-radius:14px;border:1px solid var(--border)}
+  .pos{color:var(--green)} .neg{color:var(--red)} .muted{color:var(--txt3)}
+
+  .ag-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .ag-tabs button{background:var(--bg2);border:1px solid var(--border);color:var(--txt2);padding:9px 18px;border-radius:9px;
+    font-weight:700;font-size:14px;cursor:pointer;transition:.2s}
+  .ag-tabs button:hover{color:var(--txt)}
+  .ag-tabs button.active{color:#0a0e17;border-color:transparent}
+
+  .ins{display:flex;gap:14px;align-items:flex-start}
+  .ins .ico{flex:none;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:20px;background:var(--card2)}
+  .ins h4{font-size:14.5px;font-weight:700;margin-bottom:5px}
+  .ins p{font-size:13px;color:var(--txt2)}
+  .ins p b{color:var(--txt)}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:7px;letter-spacing:.5px}
+  .tag.warn{background:rgba(248,113,113,.15);color:var(--red)}
+  .tag.good{background:rgba(52,211,153,.15);color:var(--green)}
+  .tag.info{background:rgba(59,130,246,.15);color:var(--blue)}
+  .tag.note{background:rgba(245,185,66,.15);color:var(--gold)}
+
+  .mini-coef{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:6px}
+  .mc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px}
+  .mc .l{font-size:11px;color:var(--txt3)}
+  .mc .v{font-size:19px;font-weight:800;margin-top:3px}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);font-size:11.5px;color:var(--txt3);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="logo">TEXO</span>
+      <div style="flex:1">
+        <h1>POA 2026 · Agencias</h1>
+        <div class="sub">Plan Operativo Anual — Holding TEXO · Escenario <b style="color:var(--gold)">CON 3709</b></div>
+      </div>
+      <span class="pill">6 AGENCIAS</span>
+    </div>
+    <div class="units">Cifras expresadas en <b>miles de Gs.</b> · Agencias: LUPE · BRICK · OMD · NASTA · ROGER · ROW</div>
+  </header>
+
+  <nav>
+    <button data-tab="resumen" class="active" onclick="showTab('resumen',this)">📊 Resumen Ejecutivo</button>
+    <button data-tab="consolidado" onclick="showTab('consolidado',this)">📋 Consolidado</button>
+    <button data-tab="agencia" onclick="showTab('agencia',this)">🏢 Por Agencia</button>
+    <button data-tab="insights" onclick="showTab('insights',this)">💡 Insights</button>
+  </nav>
+
+  <!-- ============ RESUMEN ============ -->
+  <section id="resumen" class="tab show">
+    <div class="section-title">Indicadores clave del holding</div>
+    <div class="grid kpis" id="kpiBox"></div>
+
+    <div class="grid cols-2" style="margin-top:18px">
+      <div class="chart-card">
+        <h3>Facturación vs Revenue por agencia</h3>
+        <div class="ch-sub">Conversión de volumen a ingreso real</div>
+        <div class="ch-box"><canvas id="chFactRev"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Participación en la facturación</h3>
+        <div class="ch-sub">Peso de cada agencia sobre el total del holding</div>
+        <div class="ch-box"><canvas id="chShare"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="chart-card">
+        <h3>Aporte al Net Profit After Tax</h3>
+        <div class="ch-sub">¿Quién genera la utilidad final?</div>
+        <div class="ch-box"><canvas id="chNpatShare"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Márgenes por agencia (% s/ Revenue)</h3>
+        <div class="ch-sub">Op. EBITDA · EBITDA · NPAT</div>
+        <div class="ch-box"><canvas id="chMargins"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONSOLIDADO ============ -->
+  <section id="consolidado" class="tab">
+    <div class="section-title">Cascada P&amp;L · POA 2026 consolidado</div>
+    <div class="chart-card">
+      <h3>De la Facturación al NPAT</h3>
+      <div class="ch-sub">Cómo se descompone cada Guaraní facturado hasta la utilidad neta</div>
+      <div class="ch-box tall"><canvas id="chWaterfall"></canvas></div>
+    </div>
+
+    <div class="section-title">Estado de Resultados por agencia</div>
+    <div class="table-scroll">
+      <table id="plTable"></table>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:18px">
+      <div class="chart-card">
+        <h3>Revenue Share por Arena</h3>
+        <div class="ch-sub">Creación vs Distribución de contenido (Trade &amp; Shopper sin actividad)</div>
+        <div class="ch-box"><canvas id="chArena"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Canales de ingreso 2026</h3>
+        <div class="ch-sub">Origen del crecimiento proyectado del revenue</div>
+        <div class="ch-box"><canvas id="chCanales"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title">Coeficientes de productividad</div>
+    <div class="table-scroll">
+      <table id="coefTable"></table>
+    </div>
+  </section>
+
+  <!-- ============ POR AGENCIA ============ -->
+  <section id="agencia" class="tab">
+    <div class="section-title">Detalle por agencia</div>
+    <div class="ag-tabs" id="agTabs"></div>
+    <div id="agContent"></div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="chart-card">
+        <h3 id="agPLTitle">Estructura financiera</h3>
+        <div class="ch-sub">Principales líneas del P&amp;L (miles de Gs)</div>
+        <div class="ch-box"><canvas id="chAgPL"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Perfil de desempeño vs Holding</h3>
+        <div class="ch-sub">Comparación de coeficientes clave (mayor = mejor)</div>
+        <div class="ch-box"><canvas id="chAgRadar"></canvas></div>
+      </div>
+    </div>
+    <div id="agInsights"></div>
+  </section>
+
+  <!-- ============ INSIGHTS ============ -->
+  <section id="insights" class="tab">
+    <div class="section-title">Lecturas estratégicas del POA 2026</div>
+    <div class="grid cols-2" id="insightBox"></div>
+
+    <div class="section-title">Evidencia visual</div>
+    <div class="grid cols-2">
+      <div class="chart-card">
+        <h3>Eficiencia: Revenue per cápita</h3>
+        <div class="ch-sub">Productividad por persona — OMD lidera con la estructura más liviana</div>
+        <div class="ch-box"><canvas id="chPerCapita"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Dependencia del cliente 3709</h3>
+        <div class="ch-sub">Incidencia del 3709 sobre el revenue (% — riesgo de concentración)</div>
+        <div class="ch-box"><canvas id="ch3709"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    POA 2026 · Agencias — TEXO Holding · Escenario con cliente 3709 · Cifras en miles de Gs.<br>
+    Dashboard generado para despliegue estático (Vercel / GitHub Pages).
+  </footer>
+</div>
+
+<script>
+/* ====================== DATA ====================== */
+const AG = ['LUPE','BRICK','OMD','NASTA','ROGER','ROW'];
+const COL = {LUPE:'#f5b942',BRICK:'#f87171',OMD:'#3b82f6',NASTA:'#34d399',ROGER:'#a78bfa',ROW:'#f472b6'};
+
+const PL = {
+  facturacion:{LUPE:16500417,BRICK:69308543,OMD:17089364,NASTA:38177060,ROGER:6387481,ROW:1941930,POA:147462865},
+  costos:{LUPE:8458828,BRICK:56038743,OMD:12768109,NASTA:26704157,ROGER:4831106,ROW:318808,POA:108800944},
+  revenue:{LUPE:8041589,BRICK:13269799,OMD:4321255,NASTA:11472903,ROGER:1556375,ROW:1623123,POA:38661921},
+  gastosRRHH:{LUPE:3706555,BRICK:7247818,OMD:1351092,NASTA:6710789,ROGER:785365,ROW:957459,POA:19801620},
+  gastosCom:{LUPE:587602,BRICK:1599272,OMD:611568,NASTA:1618390,ROGER:74000,ROW:90600,POA:4490832},
+  gastosAdm:{LUPE:1257855,BRICK:1773525,OMD:979608,NASTA:1711452,ROGER:547548,ROW:188678,POA:6269987},
+  totalEgresos:{LUPE:5552011,BRICK:10620615,OMD:2942268,NASTA:10040632,ROGER:1406913,ROW:1236737,POA:30562439},
+  opEbitda:{LUPE:2489578,BRICK:2649184,OMD:1378987,NASTA:1432271,ROGER:149462,ROW:386385,POA:8099482},
+  gastosEstra:{LUPE:61992,BRICK:84268,OMD:89159,NASTA:125571,ROGER:5978,ROW:0,POA:366969},
+  ebitda:{LUPE:2427586,BRICK:2564916,OMD:1289827,NASTA:1306701,ROGER:143483,ROW:386385,POA:7732513},
+  gastosFin:{LUPE:27600,BRICK:96000,OMD:28800,NASTA:81600,ROGER:30840,ROW:0,POA:264840},
+  deprec:{LUPE:83249,BRICK:212400,OMD:66012,NASTA:186773,ROGER:98976,ROW:7645,POA:647410},
+  netProfit:{LUPE:2316737,BRICK:2256516,OMD:1195015,NASTA:1038327,ROGER:13667,ROW:378740,POA:6820263},
+  impuestos:{LUPE:231674,BRICK:225652,OMD:119502,NASTA:103833,ROGER:1367,ROW:37874,POA:682026},
+  npat:{LUPE:2085063,BRICK:2030864,OMD:1075514,NASTA:934495,ROGER:12301,ROW:340866,POA:6138237},
+};
+const PL_ROWS = [
+  ['1- Facturación','facturacion','sub'],['2- Costos','costos',''],['3- Revenue','revenue','head-row'],
+  ['4- Gastos RRHH','gastosRRHH',''],['5- Gastos Comerciales','gastosCom',''],['6- Gastos Administrativos','gastosAdm',''],
+  ['7- Total General Egresos','totalEgresos',''],['8- Operating EBITDA','opEbitda','sub'],
+  ['9- Gastos Estratégicos','gastosEstra',''],['10- EBITDA','ebitda','sub'],
+  ['11- Gastos Financieros','gastosFin',''],['12- Deprec. & Amort.','deprec',''],
+  ['13- Net Profit','netProfit','head-row'],['15- Impuestos','impuestos',''],
+  ['16- Net Profit After Tax','npat','total'],
+];
+
+const COEF = {
+  costoFact:{LUPE:51,BRICK:81,OMD:75,NASTA:70,ROGER:76,ROW:16,POA:74},
+  revFact:{LUPE:49,BRICK:19,OMD:25,NASTA:30,ROGER:24,ROW:84,POA:26},
+  remRev:{LUPE:46,BRICK:55,OMD:31,NASTA:58,ROGER:50,ROW:59,POA:51},
+  overhead:{LUPE:50,BRICK:47,OMD:118,NASTA:50,ROGER:79,ROW:29,POA:54},
+  egresosRev:{LUPE:69,BRICK:80,OMD:68,NASTA:88,ROGER:90,ROW:76,POA:79},
+  opEbitdaRev:{LUPE:31,BRICK:20,OMD:32,NASTA:12,ROGER:10,ROW:24,POA:21},
+  ebitdaRev:{LUPE:30,BRICK:19,OMD:30,NASTA:11,ROGER:9,ROW:24,POA:20},
+  npatRev:{LUPE:26,BRICK:15,OMD:25,NASTA:8,ROGER:1,ROW:21,POA:16},
+  inc3709:{LUPE:8,BRICK:18,OMD:20,NASTA:24,ROGER:21,ROW:0,POA:18},
+};
+const COEF_ROWS = [
+  ['16- Costo / Facturación','costoFact'],['17- Revenue / Facturación','revFact'],
+  ['18- Remuneraciones / Revenue','remRev'],['19- Overhead','overhead'],
+  ['20- Egresos / Revenue','egresosRev'],['21- Operating EBITDA / Revenue','opEbitdaRev'],
+  ['22- EBITDA / Revenue','ebitdaRev'],['23- NPAT / Revenue','npatRev'],
+  ['24- Incidencia del 3709 s/ Revenue','inc3709'],
+];
+
+const ARENA = {
+  creacion:{LUPE:67.64,BRICK:46.94,OMD:16.17,NASTA:46.34,ROGER:29.29,ROW:0},
+  distribucion:{LUPE:32.36,BRICK:53.06,OMD:83.83,NASTA:53.66,ROGER:70.71,ROW:0},
+};
+const CANALES = [
+  {n:'Actualización del Fee',POA:29755728,pct:77},
+  {n:'Vender nuevos productos',POA:5764412,pct:15},
+  {n:'Diversificar prospectos',POA:2389205,pct:6},
+  {n:'Cross-selling',POA:1571998,pct:4},
+  {n:'Andarivel estratégico',POA:548700,pct:1},
+  {n:'Sponsorship',POA:255000,pct:1},
+];
+const RRHH = {
+  headcount:{LUPE:30,BRICK:63,OMD:11,NASTA:60,ROGER:9,ROW:10},
+  remPC:{LUPE:123552,BRICK:115045,OMD:122827,NASTA:111846,ROGER:87263,ROW:95746},
+  opEbitdaPC:{LUPE:82986,BRICK:42051,OMD:125362,NASTA:23871,ROGER:16607,ROW:38639},
+  revPC:{LUPE:268053,BRICK:210632,OMD:392841,NASTA:191215,ROGER:172931,ROW:162312},
+  npatPC:{LUPE:69502,BRICK:32236,OMD:97774,NASTA:15575,ROGER:1367,ROW:34087},
+};
+
+/* ====================== HELPERS ====================== */
+const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const fmtC = n => { n=Math.abs(n); if(n>=1e6) return (n/1e6).toFixed(1).replace('.',',')+'M'; if(n>=1e3) return Math.round(n/1e3)+'K'; return n; };
+const pct = n => n+'%';
+const hex2rgba=(h,a)=>{const x=h.replace('#','');return `rgba(${parseInt(x.slice(0,2),16)},${parseInt(x.slice(2,4),16)},${parseInt(x.slice(4,6),16)},${a})`;};
+
+Chart.defaults.color = '#9aa6bf';
+Chart.defaults.font.family = "'Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.borderColor = '#27314a';
+const GRID = {color:'#1d2638'};
+const moneyTip = ctx => ` ${ctx.dataset.label||ctx.label}: ₲ ${fmt(ctx.raw)} mil`;
+
+/* ====================== TAB NAV ====================== */
+const initialized = {resumen:false,consolidado:false,agencia:false,insights:false};
+function showTab(id, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(!initialized[id]){ initTab(id); initialized[id]=true; }
+}
+function initTab(id){
+  if(id==='consolidado'){ buildPLTable(); buildCoefTable(); chartWaterfall(); chartArena(); chartCanales(); }
+  if(id==='agencia'){ buildAgTabs(); selectAgency('LUPE'); }
+  if(id==='insights'){ buildInsights(); chartPerCapita(); chart3709(); }
+}
+
+/* ====================== RESUMEN ====================== */
+function buildKPIs(){
+  const totalHC = AG.reduce((s,a)=>s+RRHH.headcount[a],0);
+  const k=[
+    {l:'Facturación POA',v:'₲ '+fmt(PL.facturacion.POA),f:'miles de Gs · 6 agencias',c:'gold'},
+    {l:'Revenue',v:'₲ '+fmt(PL.revenue.POA),f:'26% de la facturación',c:'t'},
+    {l:'Operating EBITDA',v:'₲ '+fmt(PL.opEbitda.POA),f:'margen 21% s/ revenue',c:'b'},
+    {l:'EBITDA',v:'₲ '+fmt(PL.ebitda.POA),f:'margen 20% s/ revenue',c:'b'},
+    {l:'Net Profit After Tax',v:'₲ '+fmt(PL.npat.POA),f:'margen 16% s/ revenue',c:'g'},
+    {l:'Headcount total',v:totalHC,f:'personas en 6 agencias',c:''},
+    {l:'Incidencia 3709',v:'18%',f:'sobre el revenue total',c:'p'},
+    {l:'Crecimiento vía Fee',v:'77%',f:'del crecimiento del revenue',c:'gold'},
+  ];
+  document.getElementById('kpiBox').innerHTML = k.map(x=>`
+    <div class="card kpi ${x.c}"><div class="label">${x.l}</div><div class="val">${x.v}</div>
+    <div class="foot">${x.f}</div><div class="bar"></div></div>`).join('');
+}
+
+function chartFactRev(){
+  new Chart('chFactRev',{type:'bar',data:{labels:AG,datasets:[
+    {label:'Facturación',data:AG.map(a=>PL.facturacion[a]),backgroundColor:'#3b82f6',borderRadius:5},
+    {label:'Revenue',data:AG.map(a=>PL.revenue[a]),backgroundColor:'#2dd4bf',borderRadius:5}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'},tooltip:{callbacks:{label:moneyTip}}},
+    scales:{y:{grid:GRID,ticks:{callback:fmtC}},x:{grid:{display:false}}}}});
+}
+function chartShare(){
+  new Chart('chShare',{type:'doughnut',data:{labels:AG,datasets:[
+    {data:AG.map(a=>PL.facturacion[a]),backgroundColor:AG.map(a=>COL[a]),borderColor:'#0f1521',borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{position:'right'},tooltip:{callbacks:{label:c=>` ${c.label}: ₲ ${fmt(c.raw)} mil (${(c.raw/PL.facturacion.POA*100).toFixed(1)}%)`}}}}});
+}
+function chartNpatShare(){
+  new Chart('chNpatShare',{type:'doughnut',data:{labels:AG,datasets:[
+    {data:AG.map(a=>PL.npat[a]),backgroundColor:AG.map(a=>COL[a]),borderColor:'#0f1521',borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+    plugins:{legend:{position:'right'},tooltip:{callbacks:{label:c=>` ${c.label}: ₲ ${fmt(c.raw)} mil (${(c.raw/PL.npat.POA*100).toFixed(1)}%)`}}}}});
+}
+function chartMargins(){
+  new Chart('chMargins',{type:'bar',data:{labels:AG,datasets:[
+    {label:'Op. EBITDA %',data:AG.map(a=>COEF.opEbitdaRev[a]),backgroundColor:'#3b82f6',borderRadius:4},
+    {label:'EBITDA %',data:AG.map(a=>COEF.ebitdaRev[a]),backgroundColor:'#2dd4bf',borderRadius:4},
+    {label:'NPAT %',data:AG.map(a=>COEF.npatRev[a]),backgroundColor:'#34d399',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+    scales:{y:{grid:GRID,ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
+}
+
+/* ====================== CONSOLIDADO ====================== */
+function buildPLTable(){
+  let h='<thead><tr><th>Concepto (miles de Gs)</th>'+AG.map(a=>`<th>${a}</th>`).join('')+'<th>POA 2026</th></tr></thead><tbody>';
+  PL_ROWS.forEach(([lbl,key,cls])=>{
+    h+=`<tr class="${cls}"><td>${lbl}</td>`+AG.map(a=>`<td>${fmt(PL[key][a])}</td>`).join('')+`<td>${fmt(PL[key].POA)}</td></tr>`;
+  });
+  document.getElementById('plTable').innerHTML=h+'</tbody>';
+}
+function buildCoefTable(){
+  let h='<thead><tr><th>Coeficiente</th>'+AG.map(a=>`<th>${a}</th>`).join('')+'<th>POA 2026</th></tr></thead><tbody>';
+  COEF_ROWS.forEach(([lbl,key])=>{
+    const cls = key==='inc3709'?'sub':'';
+    h+=`<tr class="${cls}"><td>${lbl}</td>`+AG.map(a=>`<td>${COEF[key][a]}%</td>`).join('')+`<td>${COEF[key].POA}%</td></tr>`;
+  });
+  document.getElementById('coefTable').innerHTML=h+'</tbody>';
+}
+function chartWaterfall(){
+  const labels=['Facturación','(–) Costos','Revenue','(–) Egresos Op.','Op. EBITDA','(–) Estrat/Fin/D&A','(–) Impuestos','NPAT'];
+  const data=[[0,147462865],[38661921,147462865],[0,38661921],[8099482,38661921],[0,8099482],[6820263,8099482],[6138237,6820263],[0,6138237]];
+  const bg=['#3b82f6','#f87171','#2dd4bf','#f87171','#34d399','#f87171','#f87171','#f5b942'];
+  new Chart('chWaterfall',{type:'bar',data:{labels,datasets:[{data,backgroundColor:bg,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>{const d=Math.abs(c.raw[1]-c.raw[0]);return ` ₲ ${fmt(d)} mil`;}}}},
+      scales:{y:{grid:GRID,ticks:{callback:fmtC}},x:{grid:{display:false},ticks:{maxRotation:35,minRotation:0,font:{size:10.5}}}}}});
+}
+function chartArena(){
+  new Chart('chArena',{type:'bar',data:{labels:AG,datasets:[
+    {label:'Creación de contenido',data:AG.map(a=>ARENA.creacion[a]),backgroundColor:'#f5b942'},
+    {label:'Distribución de contenido',data:AG.map(a=>ARENA.distribucion[a]),backgroundColor:'#3b82f6'}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+    scales:{x:{stacked:true,grid:GRID,ticks:{callback:v=>v+'%'},max:100},y:{stacked:true,grid:{display:false}}}}});
+}
+function chartCanales(){
+  new Chart('chCanales',{type:'bar',data:{labels:CANALES.map(c=>c.n),datasets:[
+    {data:CANALES.map(c=>c.POA),backgroundColor:['#f5b942','#2dd4bf','#3b82f6','#34d399','#a78bfa','#f472b6'],borderRadius:5}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ₲ ${fmt(c.raw)} mil (${CANALES[c.dataIndex].pct}%)`}}},
+    scales:{x:{grid:GRID,ticks:{callback:fmtC}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+}
+
+/* ====================== POR AGENCIA ====================== */
+let agPLChart=null, agRadarChart=null;
+function buildAgTabs(){
+  document.getElementById('agTabs').innerHTML=AG.map(a=>
+    `<button id="agbtn-${a}" style="--ac:${COL[a]}" onclick="selectAgency('${a}')">${a}</button>`).join('');
+}
+function selectAgency(a){
+  AG.forEach(x=>{const b=document.getElementById('agbtn-'+x); b.classList.remove('active'); b.style.background=''; });
+  const ab=document.getElementById('agbtn-'+a); ab.classList.add('active'); ab.style.background=COL[a];
+
+  const factShare=(PL.facturacion[a]/PL.facturacion.POA*100).toFixed(1);
+  const npatShare=(PL.npat[a]/PL.npat.POA*100).toFixed(1);
+  const kpi=[
+    {l:'Facturación',v:'₲ '+fmt(PL.facturacion[a]),f:factShare+'% del holding'},
+    {l:'Revenue',v:'₲ '+fmt(PL.revenue[a]),f:COEF.revFact[a]+'% de la facturación'},
+    {l:'Operating EBITDA',v:'₲ '+fmt(PL.opEbitda[a]),f:'margen '+COEF.opEbitdaRev[a]+'%'},
+    {l:'EBITDA',v:'₲ '+fmt(PL.ebitda[a]),f:'margen '+COEF.ebitdaRev[a]+'%'},
+    {l:'Net Profit After Tax',v:'₲ '+fmt(PL.npat[a]),f:npatShare+'% del holding'},
+    {l:'Headcount',v:RRHH.headcount[a],f:'personas'},
+  ];
+  let h=`<div class="grid kpis">`+kpi.map(x=>`<div class="card kpi"><div class="label">${x.l}</div>
+    <div class="val" style="color:${COL[a]}">${x.v}</div><div class="foot">${x.f}</div>
+    <div class="bar" style="background:${COL[a]}"></div></div>`).join('')+`</div>`;
+
+  // coeficientes per cápita
+  h+=`<div class="card" style="margin-top:16px"><div class="label" style="font-size:12px;color:var(--txt2);margin-bottom:10px;
+    text-transform:uppercase;letter-spacing:.6px;font-weight:700">Indicadores per cápita (miles de Gs)</div>
+    <div class="mini-coef">
+    <div class="mc"><div class="l">Revenue / cápita</div><div class="v">${fmt(RRHH.revPC[a])}</div></div>
+    <div class="mc"><div class="l">Remuneraciones / cápita</div><div class="v">${fmt(RRHH.remPC[a])}</div></div>
+    <div class="mc"><div class="l">Op. EBITDA / cápita</div><div class="v">${fmt(RRHH.opEbitdaPC[a])}</div></div>
+    <div class="mc"><div class="l">NPAT / cápita</div><div class="v">${fmt(RRHH.npatPC[a])}</div></div>
+    <div class="mc"><div class="l">Incidencia 3709</div><div class="v" style="color:var(--purple)">${COEF.inc3709[a]}%</div></div>
+    <div class="mc"><div class="l">Overhead</div><div class="v" style="color:${COEF.overhead[a]>100?'var(--red)':'var(--txt)'}">${COEF.overhead[a]}%</div></div>
+    </div></div>`;
+
+  document.getElementById('agContent').innerHTML=h;
+  document.getElementById('agPLTitle').textContent='Estructura financiera · '+a;
+  buildAgencyInsights(a);
+
+  // charts
+  const plKeys=[['Facturación','facturacion'],['Costos','costos'],['Revenue','revenue'],['Total Egresos','totalEgresos'],['Op. EBITDA','opEbitda'],['EBITDA','ebitda'],['NPAT','npat']];
+  if(agPLChart) agPLChart.destroy();
+  agPLChart=new Chart('chAgPL',{type:'bar',data:{labels:plKeys.map(k=>k[0]),datasets:[
+    {data:plKeys.map(k=>PL[k[1]][a]),backgroundColor:hex2rgba(COL[a],.75),borderColor:COL[a],borderWidth:1,borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:c=>` ₲ ${fmt(c.raw)} mil`}}},
+    scales:{y:{grid:GRID,ticks:{callback:fmtC}},x:{grid:{display:false},ticks:{maxRotation:30,font:{size:10}}}}}});
+
+  const radarLabels=['Conversión\n(Rev/Fact)','Op. EBITDA %','EBITDA %','NPAT %','Independencia\n3709'];
+  const agData=[COEF.revFact[a],COEF.opEbitdaRev[a],COEF.ebitdaRev[a],COEF.npatRev[a],100-COEF.inc3709[a]];
+  const poaData=[COEF.revFact.POA,COEF.opEbitdaRev.POA,COEF.ebitdaRev.POA,COEF.npatRev.POA,100-COEF.inc3709.POA];
+  if(agRadarChart) agRadarChart.destroy();
+  agRadarChart=new Chart('chAgRadar',{type:'radar',data:{labels:radarLabels,datasets:[
+    {label:a,data:agData,backgroundColor:hex2rgba(COL[a],.2),borderColor:COL[a],borderWidth:2,pointBackgroundColor:COL[a]},
+    {label:'Holding (POA)',data:poaData,backgroundColor:'rgba(154,166,191,.12)',borderColor:'#9aa6bf',borderWidth:1.5,borderDash:[4,3],pointBackgroundColor:'#9aa6bf'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+    scales:{r:{angleLines:{color:'#27314a'},grid:{color:'#27314a'},pointLabels:{font:{size:10},color:'#9aa6bf'},
+      ticks:{backdropColor:'transparent',color:'#6b7794',stepSize:25},suggestedMin:0,suggestedMax:100}}}});
+}
+
+/* ====================== INSIGHTS POR AGENCIA (dinámico) ====================== */
+const METRICS=[
+  {key:'revFact',   src:COEF, label:'Conversión Revenue/Facturación', unit:'%', dir:'high', practice:'disciplina de pricing y fee para convertir volumen en ingreso propio'},
+  {key:'opEbitdaRev',src:COEF,label:'Margen Operating EBITDA',         unit:'%', dir:'high', practice:'control de egresos operativos sobre el revenue'},
+  {key:'npatRev',   src:COEF, label:'Margen NPAT',                     unit:'%', dir:'high', practice:'rentabilidad neta final sobre el ingreso'},
+  {key:'revPC',     src:RRHH, label:'Revenue per cápita',             unit:'k', dir:'high', practice:'estructura liviana y alta productividad por persona'},
+  {key:'npatPC',    src:RRHH, label:'NPAT per cápita',                unit:'k', dir:'high', practice:'utilidad generada por cada colaborador'},
+  {key:'overhead',  src:COEF, label:'Overhead',                       unit:'%', dir:'low',  practice:'gastos comerciales y administrativos contenidos'},
+  {key:'inc3709',   src:COEF, label:'Dependencia del 3709',           unit:'%', dir:'low',  practice:'diversificación de la cartera de clientes'},
+];
+function mval(m,a){ const v=m.src[m.key][a]; return m.unit==='k'? fmt(v) : v+'%'; }
+function rankInfo(m,a){
+  const s=[...AG].sort((x,y)=> m.dir==='high'? m.src[m.key][y]-m.src[m.key][x] : m.src[m.key][x]-m.src[m.key][y]);
+  return {rank:s.indexOf(a)+1, leader:s[0], total:AG.length};
+}
+function rankColor(r,t){ if(r<=2) return 'var(--green)'; if(r>=t-1) return 'var(--red)'; return 'var(--txt2)'; }
+
+function buildAgencyInsights(a){
+  const rows=METRICS.map(m=>({m,...rankInfo(m,a)}));
+  const fort=rows.filter(r=>r.rank<=2);
+  const debi=rows.filter(r=>r.rank>=r.total-1);
+  const bp=rows.filter(r=>r.rank>1).sort((x,y)=>y.rank-x.rank).slice(0,3);
+
+  const head=`<b>${a}</b> lidera o está entre los 2 mejores en <b>${fort.length} de ${rows.length}</b> indicadores`+
+    (debi.length? ` y queda en el fondo del ranking en <b>${debi.length}</b>.` : ' del portafolio.');
+
+  const fortHTML=fort.length? fort.map(r=>`<li><b>${r.m.label}</b> — ${mval(r.m,a)} <span class="muted">(#${r.rank} de ${r.total})</span></li>`).join('')
+    : '<li class="muted">Sin liderazgos claros en los indicadores medidos.</li>';
+  const debiHTML=debi.length? debi.map(r=>`<li><b>${r.m.label}</b> — ${mval(r.m,a)} <span class="muted">(#${r.rank}; líder ${r.leader} ${mval(r.m,r.leader)})</span></li>`).join('')
+    : '<li class="muted">Sin debilidades críticas: por encima del promedio en todo.</li>';
+
+  const compHTML=rows.map(r=>`<tr><td>${r.m.label}</td><td>${mval(r.m,a)}</td>
+    <td><span style="color:${rankColor(r.rank,r.total)};font-weight:700">#${r.rank}/${r.total}</span></td>
+    <td class="muted">${r.leader} · ${mval(r.m,r.leader)}</td></tr>`).join('');
+
+  const bpHTML=bp.length? bp.map(r=>`<div class="ins" style="margin-bottom:13px">
+      <div class="ico" style="background:${hex2rgba(COL[r.leader],.18)};color:${COL[r.leader]}">→</div><div>
+      <span class="tag note" style="background:${hex2rgba(COL[r.leader],.15)};color:${COL[r.leader]}">COPIAR DE ${r.leader}</span>
+      <h4 style="margin:6px 0 4px">${r.m.label}</h4>
+      <p>Adoptar <b>${r.m.practice}</b>. Hoy ${a} está en <b>${mval(r.m,a)}</b> (#${r.rank}) frente a <b>${r.leader} ${mval(r.m,r.leader)}</b>.</p>
+      </div></div>`).join('')
+    : '<p class="muted">Es el referente del portafolio: tiene poco que copiar y mucho que enseñar.</p>';
+
+  document.getElementById('agInsights').innerHTML=`
+    <div class="section-title">Insights de ${a}</div>
+    <div class="card" style="border-left:3px solid ${COL[a]};margin-bottom:16px">
+      <p style="font-size:14px">${head}</p>
+    </div>
+    <div class="grid cols-3">
+      <div class="card">
+        <span class="tag good">FORTALEZAS</span>
+        <h4 style="margin:8px 0 6px">Qué hace bien</h4>
+        <ul style="font-size:13px;color:var(--txt2);padding-left:18px;line-height:1.85">${fortHTML}</ul>
+        <span class="tag warn" style="margin-top:16px">A VIGILAR</span>
+        <h4 style="margin:8px 0 6px">Dónde pierde terreno</h4>
+        <ul style="font-size:13px;color:var(--txt2);padding-left:18px;line-height:1.85">${debiHTML}</ul>
+      </div>
+      <div class="card">
+        <span class="tag info">COMPARATIVO VS PARES</span>
+        <h4 style="margin:8px 0 10px">Ranking por indicador</h4>
+        <table style="font-size:12.5px"><thead><tr><th>Indicador</th><th>${a}</th><th>Pos.</th><th>Líder</th></tr></thead>
+        <tbody>${compHTML}</tbody></table>
+      </div>
+      <div class="card">
+        <span class="tag note">MEJORES PRÁCTICAS</span>
+        <h4 style="margin:8px 0 12px">Qué copiar de otras agencias</h4>
+        ${bpHTML}
+      </div>
+    </div>`;
+}
+
+/* ====================== INSIGHTS ====================== */
+function buildInsights(){
+  const ins=[
+    {ico:'⚠️',tag:'warn',tg:'CONCENTRACIÓN',t:'BRICK pesa, pero convierte poco',
+     p:'<b>BRICK concentra el 47% de la facturación</b> del holding (₲69.3 mil mill), pero tiene la peor conversión Revenue/Facturación (<b>19%</b>): es un modelo de alto pass-through de costos. El volumen no se traduce proporcionalmente en ingreso propio.'},
+    {ico:'🏆',tag:'good',tg:'RENTABILIDAD',t:'LUPE es el motor de utilidad',
+     p:'Mayor conversión revenue/facturación (<b>49%</b>) y mayor NPAT absoluto (<b>₲2.085 mil mill</b>). Aporta el <b>34% del NPAT</b> del holding con solo 30 personas. Modelo más sano del portafolio.'},
+    {ico:'⚡',tag:'good',tg:'EFICIENCIA',t:'OMD: la estructura más liviana',
+     p:'Lidera todos los per cápita — Revenue/cápita <b>₲392.841</b> y Op. EBITDA/cápita <b>₲125.362</b> con apenas 11 personas. <b>Alerta</b>: overhead del 118% indica gastos comerciales/admin altos respecto a su tamaño.'},
+    {ico:'🚨',tag:'warn',tg:'ZONA CRÍTICA',t:'ROGER al borde del breakeven',
+     p:'NPAT after tax de solo <b>₲12.301 mil</b> (<b>1%</b> de margen sobre revenue) y EBITDA margin del 9%, el más bajo del grupo. Requiere un plan de recuperación: revisión de costos, fee y mix de servicios.'},
+    {ico:'🎯',tag:'info',tg:'MODELO ATÍPICO',t:'ROW: estructura fee-puro',
+     p:'Costo/Facturación de solo <b>16%</b> y Revenue/Facturación del <b>84%</b> — opera casi sin pass-through. Bajo volumen pero alta conversión y margen NPAT del 21%. Cero dependencia del 3709.'},
+    {ico:'🔗',tag:'note',tg:'RIESGO DE CLIENTE',t:'Dependencia del 3709',
+     p:'Incidencia promedio del <b>18%</b> sobre el revenue, con picos en <b>NASTA (24%)</b>, ROGER (21%) y OMD (20%). Una caída del 3709 golpearía con fuerza a estas tres agencias. LUPE (8%) y ROW (0%) son las menos expuestas.'},
+    {ico:'📈',tag:'info',tg:'CRECIMIENTO',t:'El crecimiento se apoya en el fee',
+     p:'El <b>77%</b> del crecimiento proyectado del revenue viene de "Actualización del Fee" — crecimiento defensivo más que expansión comercial. La diversificación real (nuevos productos + cross-selling + prospectos) suma apenas <b>25%</b>.'},
+    {ico:'🧭',tag:'note',tg:'PORTAFOLIO DE ARENAS',t:'Distribución domina; Trade vacío',
+     p:'Distribución de contenido lidera en OMD (84%), ROGER (71%) y BRICK (53%); Creación pesa más en LUPE (68%) y empata en NASTA. <b>Trade & Shopper Marketing está en 0%</b> en las 6 agencias — gap u oportunidad de desarrollo.'},
+  ];
+  document.getElementById('insightBox').innerHTML=ins.map(x=>`
+    <div class="card ins"><div class="ico">${x.ico}</div><div>
+      <span class="tag ${x.tag}">${x.tg}</span><h4>${x.t}</h4><p>${x.p}</p></div></div>`).join('');
+}
+function chartPerCapita(){
+  const order=[...AG].sort((a,b)=>RRHH.revPC[b]-RRHH.revPC[a]);
+  new Chart('chPerCapita',{type:'bar',data:{labels:order,datasets:[
+    {label:'Revenue / cápita',data:order.map(a=>RRHH.revPC[a]),backgroundColor:order.map(a=>COL[a]),borderRadius:5}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:c=>` ₲ ${fmt(c.raw)} mil/persona · HC ${RRHH.headcount[order[c.dataIndex]]}`}}},
+    scales:{y:{grid:GRID,ticks:{callback:fmtC}},x:{grid:{display:false}}}}});
+}
+function chart3709(){
+  const order=[...AG].sort((a,b)=>COEF.inc3709[b]-COEF.inc3709[a]);
+  new Chart('ch3709',{type:'bar',data:{labels:order,datasets:[
+    {data:order.map(a=>COEF.inc3709[a]),backgroundColor:order.map(a=>COEF.inc3709[a]>=20?'#f87171':COEF.inc3709[a]>=10?'#f5b942':'#34d399'),borderRadius:5}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:c=>` Incidencia 3709: ${c.raw}%`}}},
+    scales:{x:{grid:GRID,ticks:{callback:v=>v+'%'},max:30},y:{grid:{display:false}}}}});
+}
+
+/* ====================== INIT ====================== */
+buildKPIs(); chartFactRev(); chartShare(); chartNpatShare(); chartMargins();
+initialized.resumen=true;
+</script>
+</body>
+</html>
